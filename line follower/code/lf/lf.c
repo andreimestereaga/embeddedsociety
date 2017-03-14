@@ -3,7 +3,12 @@
 #define F_CPU 16000000UL
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include <avr/eeprom.h>
 
+int16_t u16GlobalPid_P = 0;
+int16_t u16GlobalPid_D = 0;
+uint16_t EEMEM eemPid_P;
+uint16_t EEMEM eemPid_D;
 
 #include "pwm.h"
 #include "QTR.h"
@@ -103,20 +108,25 @@ void alg()
 int main()
 {
 
+	/*Init all modules*/
 	pwm_init();
 	uart_init(259);
 	QTR_init();
 	sch_init();
 	pid_init();
 
-	
+	/*Read the PID parameter from EEPROM*/
+	while( !eeprom_is_ready() ); /*wait for eeprom to be ready*/
 
+	u16GlobalPid_P = (uint16_t)eeprom_read_word(&eemPid_P);
+	u16GlobalPid_D = (uint16_t)eeprom_read_word(&eemPid_D);
+	
 
 	sch_setTask(alg,0,1);
 	sch_setTask(communication_handler_task,1,20);
 	sch_setTaskStatus(TASK_2,ENABLE_TASK);
 	pid_setpoint(0);
-	pid_set_consts(7000,0,15000);
+	pid_set_consts(u16GlobalPid_P,0,u16GlobalPid_D);
 
 	
 	sei(); 	

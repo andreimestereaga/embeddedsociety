@@ -10,7 +10,9 @@ lf.o: ../lf.c c:/winavr-20100110/lib/gcc/../../avr/include/avr/io.h \
   c:/winavr-20100110/lib/gcc/../../avr/include/avr/lock.h \
   c:/winavr-20100110/lib/gcc/../../avr/include/util/delay.h \
   c:/winavr-20100110/lib/gcc/../../avr/include/util/delay_basic.h \
-  c:/winavr-20100110/lib/gcc/../../avr/include/avr/interrupt.h ../pwm.h \
+  c:/winavr-20100110/lib/gcc/../../avr/include/avr/interrupt.h \
+  c:/winavr-20100110/lib/gcc/../../avr/include/avr/eeprom.h \
+  c:\winavr-20100110\bin\../lib/gcc/avr/4.3.3/include/stddef.h ../pwm.h \
   ../QTR.h ../uart.h ../scheduler.h ../pid.h ../communication_handler.h
 
 c:/winavr-20100110/lib/gcc/../../avr/include/avr/io.h:
@@ -38,6 +40,10 @@ c:/winavr-20100110/lib/gcc/../../avr/include/util/delay.h:
 c:/winavr-20100110/lib/gcc/../../avr/include/util/delay_basic.h:
 
 c:/winavr-20100110/lib/gcc/../../avr/include/avr/interrupt.h:
+
+c:/winavr-20100110/lib/gcc/../../avr/include/avr/eeprom.h:
+
+c:\winavr-20100110\bin\../lib/gcc/avr/4.3.3/include/stddef.h:
 
 ../pwm.h:
 

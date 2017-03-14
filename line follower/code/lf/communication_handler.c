@@ -18,6 +18,11 @@ uint8_t uart_buffer[UART_RX_MAX];
 #define AN_STOP1			(uint8_t)4
 #define AN_CMD_STOP			(uint8_t)5
 
+#define AN_CMD_INCREASE_P	(uint8_t)6
+#define AN_CMD_DECREASE_P	(uint8_t)7
+#define AN_CMD_INCREASE_D	(uint8_t)8
+#define AN_CMD_DECREASE_D	(uint8_t)10
+
 void communication_init();
 void _analyse_cmd(uint8_t cmd_char);
 

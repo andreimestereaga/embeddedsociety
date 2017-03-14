@@ -37,7 +37,7 @@ HEX_EEPROM_FLAGS += --change-section-lma .eeprom=0 --no-change-warnings
 
 
 ## Library Directories
-LIBDIRS = -L"C:\Users\AND\Desktop\lf\." 
+LIBDIRS = -L"C:\Users\AND\Documents\gg\embeddedsociety\line follower\code\lf\." 
 
 ## Objects that must be built in order to link
 OBJECTS = lf.o pwm.o QTR.o uart.o timer.o scheduler.o pid.o communication_handler.o 
