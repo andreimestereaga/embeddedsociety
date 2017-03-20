@@ -13,6 +13,26 @@
 #define START_RCV	0x1
 #define DECODE_MSG	0x2
 
+#define STOP_CMD_1 			0x7030
+#define STOP_CMD_2 			0x1C0F
+#define TURBINE_UP_1		0x610C
+#define TURBINE_UP_2		0x1843
+#define TURBINE_DOWN_1 		0x103
+#define TURBINE_DOWN_2 		0x40C
+#define START_1 			0xF0C 
+#define START_2 			0x3C3 
+
+#define PID_P_DEC_1 		0x4030
+#define PID_P_DEC_2 		0x100F
+#define PID_P_INC_1			0xC3
+#define PID_P_INC_2			0x30C	
+
+#define PID_D_DEC_1			0x3
+#define PID_D_DEC_2			0xC
+#define PID_D_INC_1			0x300C
+#define PID_D_INC_2			0xC03
+
+
 void init_turbine();
 
 void _sys_init(){
@@ -41,17 +61,20 @@ uint32_t signal_code = 0;
 uint8_t  signal_shifter = 0;
 uint16_t turbine_lvl = 500;
 
-volatile uint8_t sig_idx = 0;
+//volatile uint8_t sig_idx = 0;
 volatile uint8_t dec_state = IDLE;
 volatile uint16_t hold_counter = 0;
-volatile uint8_t msg_counter = 0;
-volatile uint8_t msg_end_qalif = 0;
+
+/*volatile uint8_t msg_counter = 0;
+volatile uint8_t msg_end_qalif = 0;*/
 
 volatile uint8_t sig_lvl = 0;
-volatile uint8_t sig_lvl_prev = 0;
+volatile uint8_t sig_lvl_prev = 1;
 volatile uint8_t idx = 0;
 
 
+#define MS_1	100
+#define MS_1_8	180
 
 
 void init_turbine(){
@@ -128,9 +151,13 @@ int main(){
 	
 	_sys_init();	
 
+	
 
 
 	while(1){
+
+
+	
 	
 	sig_lvl = GET_DEC_LVL;
 
@@ -141,38 +168,53 @@ int main(){
 		case IDLE:
 		{
 			
-			if(sig_lvl == 0){
-				dec_state = CHECK_SIG;
-				hold_counter = 0;
-	
-			
-			}
-			else{
-				dec_state = IDLE;
-			}
-		}
-		break;
 
-		case CHECK_SIG:
-		{
+			if( (hold_counter > MS_1) && (sig_lvl != sig_lvl_prev)){
+				hold_counter = 0;
+				signal_shifter = 0;
+				signal_code = 0;
+				idx = 0;
+				dec_state = CHECK_SIG;
+			}
 			
 			if(sig_lvl == 0){
 				hold_counter++;
 			}
 			else{
-				dec_state = IDLE;
 				hold_counter = 0;
 			}
+		
 			
-			if(hold_counter == START_DEC_THRESHOLD){
-				dec_state = START_RCV;
+			
+		
+		}
+		break;
+
+		case CHECK_SIG:
+		{
+
+			if((sig_lvl != sig_lvl_prev)){
 				
+				signal_periods[idx] = (uint8_t)hold_counter;
 				hold_counter = 0;
-				sig_lvl = 0;
+				idx++;
+			}
+			else if(hold_counter > 200){
+				idx++;
+			}
+
+			if(idx == 74){
+				dec_state = START_RCV;
+				hold_counter = 0;
 				idx = 0;
-				msg_end_qalif = 0;
+			}
+	
+			if(hold_counter == 255){
 
-
+			}
+			else
+			{
+				hold_counter++;
 			}
 
 		}	
@@ -180,102 +222,106 @@ int main(){
 
 		case START_RCV:
 		{
-		while(idx < 75){
-		
-			sig_lvl = GET_DEC_LVL;
+			for(idx = 0; idx < 75; idx++){
+			
+				if(signal_periods[idx] != 0){
+					if( (signal_periods[idx] > 85) && (signal_periods[idx] < 110)){
+						
+						signal_code |=  (1 << signal_shifter);
 
-			if((sig_lvl != sig_lvl_prev)  || (hold_counter == SIG_HOLD_THRS)){
+					}
+					else if( (signal_periods[idx] > 40) && (signal_periods[idx] < 60)){
 
-				if(hold_counter == SIG_HOLD_THRS){
-					msg_end_qalif++;
-				}
-				
-				if( (hold_counter > THOMSON_REPEAT_THR) && (hold_counter < THOMSON_HOLD_THR) ){
-				
-					signal_periods[idx] = 0xFF;
-				}
-				else if( (hold_counter > SIG_HIGH_THR) && (hold_counter <= THOMSON_REPEAT_THR) ){
-					signal_periods[idx] = 1;
+					}
+						signal_shifter++;
+
+						if(signal_shifter == 32){
+							break;
+						}
+					
 				}
 				else{
-					signal_periods[idx] = 0;
+					break;
 				}
-
-				idx++;
-				hold_counter = 0;
 			}
-		
-			hold_counter++;
-			sig_lvl_prev = sig_lvl;
-
-			if(msg_end_qalif >= SIG_QALIF_THR){
-				dec_state = DECODE_MSG;
-				break;
+			for(idx = 0; idx < 75; idx++){
+				signal_periods[idx] = 0;
 			}
+			dec_state = DECODE_MSG;
 
-		}
-
-		dec_state = DECODE_MSG;
 		}
 		break;
 
 		case DECODE_MSG:
 		{
 		
-		signal_code = 0;
-		signal_shifter = 0;
-
-		for(idx = 0; idx < 75; idx++){
-			
-			
-			if( signal_periods[idx] == 0xFF ){
-				if(signal_shifter == THOMSON_MAX_BITS){
-					signal_shifter = 0;
-				}
-				else{
-					signal_shifter = 0;
-					signal_code = 0;
-				}
+			if(signal_code == STOP_CMD_1 || signal_code == STOP_CMD_2){
+				dbg_putchar(0x55);
+				dbg_putchar(0xAA);
+				stop_turbine();
+			}
+			else if(TURBINE_UP_1 == signal_code || TURBINE_UP_2 == signal_code){
 				
-			}
-			else if( signal_periods[idx] == 1 ){
-				signal_code |= ( (uint32_t)0x1 << signal_shifter);
-				signal_shifter++;
-			}
-			else{
-				signal_shifter++;
-			}
-
-			signal_periods[idx] = 0;
-		}
-
-		LED_ON;
-		_delay_ms(100);
-		LED_OFF;
-		msg_counter++;
-		dec_state = IDLE;
-
-		if( (uint8_t)(signal_code >> 16) == 0x0A){
-			stop_turbine();
-		}
-		else if( (uint8_t)(signal_code >> 16) == 0x82){
-			if(set_turbine( (uint16_t)(turbine_lvl + 50)) ){
+				if(set_turbine( (uint16_t)(turbine_lvl + 50)) ){
 				turbine_lvl += 50;
+				}
+				_delay_ms(100);
 			}
-		}
-		else if( (uint8_t)(signal_code >> 16) == 0x22){
-			if(set_turbine( (uint16_t)(turbine_lvl - 50)) ){
+			else if(TURBINE_DOWN_1 == signal_code || TURBINE_DOWN_2 == signal_code){
+				if(set_turbine( (uint16_t)(turbine_lvl - 50)) ){
 				turbine_lvl -= 50;
 			}
-		}
-		else if( (uint8_t)(signal_code >> 16) == 0x88){
-			max_turbine();
-		}
+				_delay_ms(100);
+			}
+			else if(START_1 == signal_code || START_2 == signal_code){
+				dbg_putchar(0x55);
+				dbg_putchar(0xFF);
+				_delay_ms(100);
+			}
+			
+
+			else if(PID_P_INC_1 == signal_code || PID_P_INC_2 == signal_code){
+				dbg_putchar(0x55);
+				dbg_putchar(0xF1);
+				dbg_putchar(0xAA);
+				_delay_ms(100);
+			}
+			else if(PID_P_DEC_1 == signal_code || PID_P_DEC_2 == signal_code){
+				dbg_putchar(0x55);
+				dbg_putchar(0xF2);
+				dbg_putchar(0xAA);
+				_delay_ms(100);
+			}
+			else if(PID_D_DEC_1 == signal_code || PID_D_DEC_2 == signal_code){
+				dbg_putchar(0x55);
+				dbg_putchar(0xD2);
+				dbg_putchar(0xAA);
+				_delay_ms(100);
+			}
+			else if(PID_D_INC_1 == signal_code || PID_D_INC_2 == signal_code){
+				dbg_putchar(0x55);
+				dbg_putchar(0xD1);
+				dbg_putchar(0xAA);
+				_delay_ms(100);
+			}
+			
+			
 		
-		dbg_putchar( (uint8_t) signal_code);
-		dbg_putchar( (uint8_t) (signal_code >> 8) );
-		dbg_putchar( (uint8_t) (signal_code >> 16) );
-		dbg_putchar( (uint8_t) (signal_code >> 24) );
+		
+		
+			/*
+			dbg_putchar( (uint8_t)signal_code);
+			dbg_putchar( (uint8_t)(signal_code >> 8));
+			dbg_putchar( (uint8_t)(signal_code >> 16));
+			dbg_putchar( (uint8_t)(signal_code >> 24));
+			*/
+			
+			
+			
+			
+			
+
+			dec_state = IDLE;
 		}
 		break;
 		default:
@@ -284,6 +330,8 @@ int main(){
 		break;
 	}
 
+	sig_lvl_prev = sig_lvl;
+	_delay_us(10);
 
 	}
 
