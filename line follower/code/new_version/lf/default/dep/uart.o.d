@@ -8,7 +8,8 @@ uart.o: ../uart.c c:/winavr-20100110/lib/gcc/../../avr/include/avr/io.h \
   c:/winavr-20100110/lib/gcc/../../avr/include/avr/version.h \
   c:/winavr-20100110/lib/gcc/../../avr/include/avr/fuse.h \
   c:/winavr-20100110/lib/gcc/../../avr/include/avr/lock.h ../uart.h \
-  c:/winavr-20100110/lib/gcc/../../avr/include/avr/interrupt.h
+  c:/winavr-20100110/lib/gcc/../../avr/include/avr/interrupt.h \
+  ../scheduler.h ../pwm.h
 
 c:/winavr-20100110/lib/gcc/../../avr/include/avr/io.h:
 
@@ -33,3 +34,7 @@ c:/winavr-20100110/lib/gcc/../../avr/include/avr/lock.h:
 ../uart.h:
 
 c:/winavr-20100110/lib/gcc/../../avr/include/avr/interrupt.h:
+
+../scheduler.h:
+
+../pwm.h:

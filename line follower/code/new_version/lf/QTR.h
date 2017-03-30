@@ -5,7 +5,7 @@
 
 extern void QTR_init();
 extern uint16_t QTR_compute();
-extern void QTR_reading(uint16_t * values);
+extern uint16_t QTR_reading(uint16_t * values);
 
 
 #endif

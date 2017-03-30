@@ -109,22 +109,22 @@ int16_t pid_calculate(int16_t value)
 //	}
 //	integrate_count++;
 
-	if (error != prv_error)
-	{
-		derivate = (error - prv_error);
-		dLatchCounter = D_LATCH;
-	}
-	else
-	{
-		if (dLatchCounter > 0)
-		{
-			dLatchCounter--;
-		}
-		else
-		{
+//	if (error != prv_error)
+//	{
+//		derivate = (error - prv_error);
+//		dLatchCounter = D_LATCH;
+//	}
+//	else
+//	{
+//		if (dLatchCounter > 0)
+//		{
+//			dLatchCounter--;
+//		}
+//		else
+//		{
 			derivate = (error - prv_error);
-		}
-	}
+//		}
+//	}
 
 	temp = (int32_t)((int32_t)((int32_t)_p * (int32_t)error) + (int32_t)_d * (int32_t)derivate); //+ (int32_t)_i * (int32_t)integrate); 
 	if(temp > (int32_t)32767)

@@ -4,8 +4,8 @@
 
 #include "stdint.h"
 
-#define P_UNIT 1000
-#define D_UNIT 1000
+#define P_UNIT 100
+#define D_UNIT 100
 
 #define PID_EEPROM_OK	1
 #define PID_EEPROM_NOK	2

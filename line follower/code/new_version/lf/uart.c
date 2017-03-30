@@ -1,6 +1,8 @@
 #include <avr/io.h>
 #include "uart.h"
 #include <avr/interrupt.h>
+#include "scheduler.h"
+#include "pwm.h"
 
 
 
@@ -29,6 +31,9 @@ ISR(USART_TXC_vect)
 
 ISR(USART_RXC_vect)
 {
+	sch_setTaskStatus(TASK_1,DISABLE_TASK);
+	pwm_setMotors(MOTOR_FORWARD,0,MOTOR_FORWARD,0);
+
 	uart_rx_state = UART_RECEIVE;
 	uart_rx_buffer[uart_rx_index++] = UDR;
 
